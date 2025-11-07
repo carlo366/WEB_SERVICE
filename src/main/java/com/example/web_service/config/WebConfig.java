@@ -25,7 +25,7 @@ public class WebConfig {
             @Override
             public void addResourceHandlers(ResourceHandlerRegistry registry) {
                 registry.addResourceHandler("/uploads/**")
-                        .addResourceLocations("file:uploads/"); // mapping folder uploads di root proyek
+                        .addResourceLocations("file:uploads/");
             }
         };
     }

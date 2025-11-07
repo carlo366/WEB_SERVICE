@@ -38,7 +38,7 @@ public class ProfileController {
 
             String username = jwtUtil.extractUsername(token);
             User user = userService.findByUsername(username);
-            user.setPasswordHash(null); // jangan kirim hash password
+            user.setPasswordHash(null); 
 
             response.put("status", "success");
             response.put("user", user);
@@ -51,7 +51,7 @@ public class ProfileController {
         return response;
     }
 
-    // UPDATE profile (username tidak bisa diubah)
+    // ini UPDATE profile tidak dengan username dan password
     @PutMapping(consumes = { "multipart/form-data" })
     public Map<String, Object> updateProfile(
             @RequestHeader("Authorization") String authHeader,
@@ -103,7 +103,7 @@ public class ProfileController {
             }
 
             User updatedUser = userService.saveProfile(existingUser);
-            updatedUser.setPasswordHash(null); // jangan kirim hash password
+            updatedUser.setPasswordHash(null); 
 
             response.put("status", "success");
             response.put("user", updatedUser);
