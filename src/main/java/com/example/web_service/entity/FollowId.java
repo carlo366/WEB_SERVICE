@@ -8,6 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FollowId implements Serializable {
-    private Long follower;
-    private Long followee;
+    private Long followerId;
+    private Long followeeId;
 }

@@ -7,19 +7,16 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Entity
 @Table(name = "follows")
 @IdClass(FollowId.class)
 public class Follow {
 
     @Id
-    @ManyToOne
-    @JoinColumn(name = "follower_id", nullable = false)
-    private User follower;
+    @Column(name = "follower_id")
+    private Long followerId;
 
     @Id
-    @ManyToOne
-    @JoinColumn(name = "followee_id", nullable = false)
-    private User followee;
+    @Column(name = "followee_id")
+    private Long followeeId;
 }
