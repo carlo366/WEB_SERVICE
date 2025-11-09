@@ -1,0 +1,88 @@
+package com.example.web_service.service;
+
+import com.example.web_service.entity.*;
+import com.example.web_service.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class PostInteractionService {
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private LikeRepository likeRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    public String likePost(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
+
+        boolean alreadyLiked = likeRepository.existsByUserIdAndTargetId(userId, postId);
+        if (alreadyLiked) {
+            throw new RuntimeException("Kamu sudah menyukai postingan ini");
+        }
+
+        Like like = Like.builder()
+                .userId(userId)
+                .targetId(postId)
+                .build();
+
+        likeRepository.save(like);
+        return "Post disukai!";
+    }
+
+    public String unlikePost(Long postId, Long userId) {
+        Like like = likeRepository.findByUserIdAndTargetId(userId, postId)
+                .orElseThrow(() -> new RuntimeException("Kamu belum menyukai postingan ini"));
+
+        likeRepository.delete(like);
+        return "Unlike berhasil!";
+    }
+
+    public Comment addComment(Long postId, Long userId, String body) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
+
+        if (body == null || body.trim().isEmpty())
+            throw new RuntimeException("Isi komentar tidak boleh kosong");
+
+        Comment comment = Comment.builder()
+                .post(post)
+                .userId(userId)
+                .body(body.trim())
+                .build();
+
+        return commentRepository.save(comment);
+    }
+
+    public String deleteComment(Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Komentar tidak ditemukan"));
+
+        Post post = comment.getPost();
+        Long postOwnerId = post.getUser().getId();
+
+        if (!comment.getUserId().equals(userId) && !postOwnerId.equals(userId)) {
+            throw new RuntimeException("Kamu tidak memiliki izin untuk menghapus komentar ini");
+        }
+
+        commentRepository.delete(comment);
+        return "Komentar berhasil dihapus!";
+    }
+
+    public long countLikes(Long postId) {
+        return likeRepository.countByTargetId(postId);
+    }
+
+    public List<Comment> getComments(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
+        return commentRepository.findByPost(post);
+    }
+}

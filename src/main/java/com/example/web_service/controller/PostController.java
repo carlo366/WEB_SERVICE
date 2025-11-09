@@ -17,6 +17,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api")
 public class PostController {
+
     @Autowired private PostService postService;
     @Autowired private UserService userService;
     @Autowired private JwtUtil jwtUtil;
@@ -25,7 +26,7 @@ public class PostController {
 
     private final DateTimeFormatter ISO_UTC = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
-    // mengambil semua post 
+    // all post ini
     @GetMapping("/posts")
     public Map<String,Object> getAllPosts(){
         Map<String,Object> resp = new HashMap<>();
@@ -33,12 +34,12 @@ public class PostController {
             List<Post> posts = postService.getAllPosts();
             List<Map<String,Object>> out = new ArrayList<>();
             for (Post p : posts){
-                Map<String,Object> pu = new HashMap<>();
                 Map<String,Object> u = new HashMap<>();
                 u.put("id", p.getUser().getId());
                 u.put("username", p.getUser().getUsername());
                 u.put("avatar", p.getUser().getAvatar());
 
+                Map<String,Object> pu = new HashMap<>();
                 pu.put("id", p.getId());
                 pu.put("user", u);
                 pu.put("content", p.getContent());
@@ -48,6 +49,7 @@ public class PostController {
                 pu.put("created_at", p.getCreatedAt().atOffset(ZoneOffset.UTC).format(ISO_UTC));
                 out.add(pu);
             }
+
             resp.put("status_code", 200);
             resp.put("message", "All posts retrieved successfully!");
             resp.put("success", true);
@@ -56,18 +58,18 @@ public class PostController {
             resp.put("status_code", 400);
             resp.put("message", e.getMessage());
             resp.put("success", false);
-            resp.put("data", null);
         }
         return resp;
     }
 
-    // mengambil post dari username
+    // ini post by username
     @GetMapping("/users/{username}/posts")
     public Map<String,Object> getPostsByUsername(@PathVariable String username){
         Map<String,Object> resp = new HashMap<>();
         try {
             User user = userService.findByUsername(username);
             List<Post> posts = postService.getPostsByUser(user);
+
             List<Map<String,Object>> out = new ArrayList<>();
             for (Post p : posts){
                 Map<String,Object> item = new HashMap<>();
@@ -77,6 +79,7 @@ public class PostController {
                 item.put("created_at", p.getCreatedAt().atOffset(ZoneOffset.UTC).format(ISO_UTC));
                 out.add(item);
             }
+
             resp.put("status_code", 200);
             resp.put("message", "User posts retrieved successfully!");
             resp.put("success", true);
@@ -85,23 +88,115 @@ public class PostController {
             resp.put("status_code", 400);
             resp.put("message", e.getMessage());
             resp.put("success", false);
-            resp.put("data", null);
         }
         return resp;
     }
 
-    // membuat post
+    // ini get detil post by username
+    @GetMapping("/users/{username}/posts/{postId}")
+    public Map<String,Object> getPostDetailByUsername(@PathVariable String username, @PathVariable Long postId) {
+        Map<String,Object> resp = new HashMap<>();
+        try {
+            Post post = postService.getPostByUsernameAndId(username, postId);
+
+            Map<String,Object> data = new HashMap<>();
+            data.put("id", post.getId());
+            data.put("content", post.getContent());
+            data.put("media_url", post.getMediaUrl());
+            data.put("likes_count", likeRepository.countByTargetId(post.getId()));
+            data.put("comments_count", commentRepository.countByPost(post));
+            data.put("created_at", post.getCreatedAt().atOffset(ZoneOffset.UTC).format(ISO_UTC));
+
+            resp.put("status_code", 200);
+            resp.put("message", "User post detail retrieved successfully!");
+            resp.put("success", true);
+            resp.put("data", data);
+        } catch (Exception e) {
+            resp.put("status_code", 404);
+            resp.put("message", e.getMessage());
+            resp.put("success", false);
+        }
+        return resp;
+    }
+
+    // ini get post pribadi
+    @GetMapping("/posts/self")
+    public Map<String,Object> getOwnPosts(@RequestHeader("Authorization") String authHeader) {
+        Map<String,Object> resp = new HashMap<>();
+        try {
+            String token = authHeader.substring(7);
+            Long userId = jwtUtil.extractUserId(token); 
+            User user = userService.findById(userId); 
+            List<Post> posts = postService.getPostsByUser(user);
+
+            List<Map<String,Object>> out = new ArrayList<>();
+            for (Post p : posts){
+                Map<String,Object> item = new HashMap<>();
+                item.put("id", p.getId());
+                item.put("content", p.getContent());
+                item.put("media_url", p.getMediaUrl());
+                item.put("created_at", p.getCreatedAt().atOffset(ZoneOffset.UTC).format(ISO_UTC));
+                out.add(item);
+            }
+
+            resp.put("status_code", 200);
+            resp.put("message", "Your posts retrieved successfully!");
+            resp.put("success", true);
+            resp.put("data", out);
+        } catch (Exception e){
+            resp.put("status_code", 400);
+            resp.put("message", e.getMessage());
+            resp.put("success", false);
+        }
+        return resp;
+    }
+
+    // detil post pribadi
+    @GetMapping("/posts/self/{postId}")
+    public Map<String,Object> getOwnPostDetail(@RequestHeader("Authorization") String authHeader, @PathVariable Long postId) {
+        Map<String,Object> resp = new HashMap<>();
+        try {
+            String token = authHeader.substring(7);
+            Long userId = jwtUtil.extractUserId(token); 
+            User user = userService.findById(userId);   
+            Post post = postService.getPostByUserAndId(user, postId);
+
+            Map<String,Object> data = new HashMap<>();
+            data.put("id", post.getId());
+            data.put("content", post.getContent());
+            data.put("media_url", post.getMediaUrl());
+            data.put("likes_count", likeRepository.countByTargetId(post.getId()));
+            data.put("comments_count", commentRepository.countByPost(post));
+            data.put("created_at", post.getCreatedAt().atOffset(ZoneOffset.UTC).format(ISO_UTC));
+
+            resp.put("status_code", 200);
+            resp.put("message", "Your post detail retrieved successfully!");
+            resp.put("success", true);
+            resp.put("data", data);
+        } catch (Exception e){
+            resp.put("status_code", 400);
+            resp.put("message", e.getMessage());
+            resp.put("success", false);
+        }
+        return resp;
+    }
+
+    // ini membuat post
     @PostMapping("/posts")
     public Map<String,Object> createPost(
             @RequestHeader(name = "Authorization", required = false) String authHeader,
             @RequestBody Map<String,String> body){
         Map<String,Object> resp = new HashMap<>();
         try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) throw new RuntimeException("Header Authorization tidak valid");
+            if (authHeader == null || !authHeader.startsWith("Bearer "))
+                throw new RuntimeException("Header Authorization tidak valid");
+
             String token = authHeader.substring(7);
-            if (!jwtUtil.validateToken(token)) throw new RuntimeException("Token tidak valid/expired");
-            String username = jwtUtil.extractUsername(token);
-            User user = userService.findByUsername(username);
+            if (!jwtUtil.validateToken(token))
+                throw new RuntimeException("Token tidak valid/expired");
+
+            Long userId = jwtUtil.extractUserId(token); 
+            User user = userService.findById(userId);   
 
             String content = body.get("content");
             String media = body.get("media");
@@ -121,7 +216,6 @@ public class PostController {
             resp.put("status_code", 400);
             resp.put("message", e.getMessage());
             resp.put("success", false);
-            resp.put("data", null);
         }
         return resp;
     }

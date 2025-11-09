@@ -27,7 +27,6 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // Helper responnya
     private Map<String, Object> successResponse(Object data, String message) {
         Map<String, Object> map = new HashMap<>();
         map.put("status_code", 200);
@@ -46,7 +45,7 @@ public class AuthController {
         return map;
     }
 
-    // ini register
+    // ✅ REGISTER
     @PostMapping(value = "/register", consumes = { "multipart/form-data" })
     public Map<String, Object> register(
             @RequestParam("username") String username,
@@ -62,7 +61,7 @@ public class AuthController {
 
             User user = new User();
             user.setUsername(username);
-            user.setPasswordHash(password); 
+            user.setPasswordHash(password);
             user.setEmail(email);
             user.setBio(bio != null ? bio : "");
             user.setCreatedAt(LocalDateTime.now());
@@ -87,7 +86,7 @@ public class AuthController {
         }
     }
 
-    // ini LOGIN
+    // ✅ LOGIN
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody Map<String, String> body) {
         try {
@@ -100,14 +99,13 @@ public class AuthController {
             User user = userService.findByUsername(username);
 
             if (passwordEncoder.matches(password, user.getPasswordHash())) {
-                String token = jwtUtil.generateToken(username);
-                long expiresIn = jwtUtil.getExpirationTime(); // ms
-                LocalDateTime expiredAt = LocalDateTime.now().plusSeconds(expiresIn / 1000);
-
+                String token = jwtUtil.generateToken(user.getId());
+                long expiresIn = jwtUtil.getExpirationTime();
+ 
                 Map<String, Object> data = new HashMap<>();
                 data.put("token", token);
                 data.put("expiresIn", expiresIn / 1000 + " detik");
-                data.put("expiredAt", expiredAt);
+                data.put("user", user);
 
                 return successResponse(data, "Login berhasil!");
             } else {
@@ -118,7 +116,7 @@ public class AuthController {
         }
     }
 
-    // ini LOGOUT
+    // ✅ LOGOUT
     @PostMapping("/logout")
     public Map<String, Object> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
@@ -131,8 +129,7 @@ public class AuthController {
                 throw new RuntimeException("Token sudah di-logout sebelumnya");
 
             jwtUtil.blacklistToken(token);
-
-            return successResponse(null, "Logout berhasil, token telah di-blacklist");
+            return successResponse(null, "Logout berhasil, token di-blacklist");
         } catch (Exception e) {
             return errorResponse(e.getMessage(), 400);
         }

@@ -32,27 +32,20 @@ public class JwtFilter extends OncePerRequestFilter {
                                    FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
-
-        // lewati auth dan upload
         if (path.startsWith("/api/auth/") || path.startsWith("/uploads/")) {
             filterChain.doFilter(request, response);
             return;
         }
-
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token tidak ditemukan");
             return;
         }
-
         String token = header.substring(7);
-
-        // Cek apakah token sudah direvoke
         if (jwtUtil.isTokenRevoked(token)) {
             sendError(response, HttpServletResponse.SC_FORBIDDEN, "Token sudah di-logout");
             return;
         }
-
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(SECRET_KEY)
@@ -65,8 +58,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token tidak valid");
                 return;
             }
-
-            // Ini penting — tandai user sudah "authenticated"
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(new User(username, "", Collections.emptyList()), null, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(auth);

@@ -14,6 +14,7 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private FollowRepository followRepository;
 
@@ -23,9 +24,14 @@ public class UserService {
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
-
+    
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+    }
+
+    public User findById(Long id) {
+        return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
     }
 
@@ -43,7 +49,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // ini update profil
+    // ✅ Update profil
     public User saveProfile(User user) {
         User existing = userRepository.findById(user.getId())
                 .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
@@ -63,5 +69,4 @@ public class UserService {
     public long countFollowing(Long userId) {
         return followRepository.countByFollowerId(userId);
     }
-
 }

@@ -18,7 +18,7 @@ public class Like {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "target_id", nullable = false) // target post id
+    @Column(name = "target_id", nullable = false) 
     private Long targetId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
