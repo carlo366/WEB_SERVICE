@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class PostInteractionService {
@@ -19,7 +20,7 @@ public class PostInteractionService {
     @Autowired
     private CommentRepository commentRepository;
 
-    public String likePost(Long postId, Long userId) {
+    public String likePost(UUID postId, UUID userId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
 
@@ -37,7 +38,7 @@ public class PostInteractionService {
         return "Post disukai!";
     }
 
-    public String unlikePost(Long postId, Long userId) {
+    public String unlikePost(UUID postId, UUID userId) {
         Like like = likeRepository.findByUserIdAndTargetId(userId, postId)
                 .orElseThrow(() -> new RuntimeException("Kamu belum menyukai postingan ini"));
 
@@ -45,7 +46,7 @@ public class PostInteractionService {
         return "Unlike berhasil!";
     }
 
-    public Comment addComment(Long postId, Long userId, String body) {
+    public Comment addComment(UUID postId, UUID userId, String body) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
 
@@ -61,12 +62,12 @@ public class PostInteractionService {
         return commentRepository.save(comment);
     }
 
-    public String deleteComment(Long commentId, Long userId) {
+    public String deleteComment(UUID commentId, UUID userId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Komentar tidak ditemukan"));
 
         Post post = comment.getPost();
-        Long postOwnerId = post.getUser().getId();
+        UUID postOwnerId = post.getUser().getId();
 
         if (!comment.getUserId().equals(userId) && !postOwnerId.equals(userId)) {
             throw new RuntimeException("Kamu tidak memiliki izin untuk menghapus komentar ini");
@@ -76,11 +77,11 @@ public class PostInteractionService {
         return "Komentar berhasil dihapus!";
     }
 
-    public long countLikes(Long postId) {
+    public long countLikes(UUID postId) {
         return likeRepository.countByTargetId(postId);
     }
 
-    public List<Comment> getComments(Long postId) {
+    public List<Comment> getComments(UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
         return commentRepository.findByPost(post);

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/follows")
@@ -22,7 +23,7 @@ public class FollowController {
     @PostMapping("/{userId}")
     public Map<String, Object> followUser(
             @RequestHeader("Authorization") String authHeader,
-            @PathVariable Long userId
+            @PathVariable String userId
     ) {
         Map<String, Object> resp = new HashMap<>();
         try {
@@ -35,8 +36,9 @@ public class FollowController {
                 throw new RuntimeException("Token tidak valid atau sudah expired");
             }
 
-            Long followerId = jwtUtil.extractUserId(token);
-            followService.followUser(followerId, userId);
+            UUID followerId = jwtUtil.extractUserId(token);
+            UUID userUUID=UUID.fromString(userId);
+            followService.followUser(followerId, userUUID);
 
             resp.put("status_code", 200);
             resp.put("message", "Berhasil mengikuti user!");
@@ -55,7 +57,7 @@ public class FollowController {
     @DeleteMapping("/{userId}")
     public Map<String, Object> unfollowUser(
             @RequestHeader("Authorization") String authHeader,
-            @PathVariable Long userId
+            @PathVariable String userId
     ) {
         Map<String, Object> resp = new HashMap<>();
         try {
@@ -68,8 +70,9 @@ public class FollowController {
                 throw new RuntimeException("Token tidak valid atau sudah expired");
             }
 
-            Long followerId = jwtUtil.extractUserId(token);
-            followService.unfollowUser(followerId, userId);
+            UUID followerId = jwtUtil.extractUserId(token);
+            UUID userUUID=UUID.fromString(userId);
+            followService.unfollowUser(followerId, userUUID);
 
             resp.put("status_code", 200);
             resp.put("message", "Berhasil berhenti mengikuti user!");

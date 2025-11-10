@@ -3,6 +3,7 @@ package com.example.web_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -12,15 +13,15 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "comments")
 public class Comment {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id
+    private UUID id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "post_id")
     private Post post;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(columnDefinition = "TEXT")
     private String body;

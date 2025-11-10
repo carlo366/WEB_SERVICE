@@ -19,7 +19,7 @@ public class PostInteractionController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private Long extractUserId(HttpServletRequest request) {
+    private UUID extractUserId(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
         if (token == null || !token.startsWith("Bearer ")) {
             throw new RuntimeException("Token tidak ditemukan atau tidak valid");
@@ -46,9 +46,9 @@ public class PostInteractionController {
 
     // ini like a post
     @PostMapping("/{postId}/likes")
-    public Map<String, Object> likePost(@PathVariable Long postId, HttpServletRequest request) {
+    public Map<String, Object> likePost(@PathVariable UUID postId, HttpServletRequest request) {
         try {
-            Long userId = extractUserId(request);
+            UUID userId = extractUserId(request);
             String message = postInteractionService.likePost(postId, userId);
             Map<String, Object> data = Map.of("likes_count", postInteractionService.countLikes(postId));
             return successResponse(message, data);
@@ -59,11 +59,12 @@ public class PostInteractionController {
 
     // ini unlike
     @DeleteMapping("/{postId}/likes")
-    public Map<String, Object> unlikePost(@PathVariable Long postId, HttpServletRequest request) {
+    public Map<String, Object> unlikePost(@PathVariable String postId, HttpServletRequest request) {
         try {
-            Long userId = extractUserId(request);
-            String message = postInteractionService.unlikePost(postId, userId);
-            Map<String, Object> data = Map.of("likes_count", postInteractionService.countLikes(postId));
+            UUID userId = extractUserId(request);
+            UUID postUUID=UUID.fromString(postId);
+            String message = postInteractionService.unlikePost(postUUID, userId);
+            Map<String, Object> data = Map.of("likes_count", postInteractionService.countLikes(postUUID));
             return successResponse(message, data);
         } catch (RuntimeException e) {
             return errorResponse(e.getMessage());
@@ -72,13 +73,14 @@ public class PostInteractionController {
 
     // ini tambah komentar
     @PostMapping("/{postId}/comments")
-    public Map<String, Object> addComment(@PathVariable Long postId,
+    public Map<String, Object> addComment(@PathVariable String postId,
                                           @RequestBody Map<String, String> body,
                                           HttpServletRequest request) {
         try {
-            Long userId = extractUserId(request);
+            UUID userId = extractUserId(request);
+            UUID postUUID=UUID.fromString(postId);
             String content = body.get("content");
-            Comment comment = postInteractionService.addComment(postId, userId, content);
+            Comment comment = postInteractionService.addComment(postUUID, userId, content);
 
             Map<String, Object> data = new HashMap<>();
             data.put("comment_id", comment.getId());
@@ -91,10 +93,11 @@ public class PostInteractionController {
 
     // ini hapus komentar
     @DeleteMapping("/comments/{commentId}")
-    public Map<String, Object> deleteComment(@PathVariable Long commentId, HttpServletRequest request) {
+    public Map<String, Object> deleteComment(@PathVariable String commentId, HttpServletRequest request) {
         try {
-            Long userId = extractUserId(request);
-            String message = postInteractionService.deleteComment(commentId, userId);
+            UUID userId = extractUserId(request);
+            UUID commentUUID=UUID.fromString(commentId);
+            String message = postInteractionService.deleteComment(commentUUID, userId);
             return successResponse(message, null);
         } catch (RuntimeException e) {
             return errorResponse(e.getMessage());
@@ -103,9 +106,10 @@ public class PostInteractionController {
 
     // ini all komentar
     @GetMapping("/{postId}/comments")
-    public Map<String, Object> getComments(@PathVariable Long postId) {
+    public Map<String, Object> getComments(@PathVariable String postId) {
         try {
-            List<Comment> comments = postInteractionService.getComments(postId);
+            UUID postUUID=UUID.fromString(postId);
+            List<Comment> comments = postInteractionService.getComments(postUUID);
             return successResponse("Daftar komentar berhasil diambil!", comments);
         } catch (RuntimeException e) {
             return errorResponse(e.getMessage());

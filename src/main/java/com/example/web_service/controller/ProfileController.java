@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/profile")
@@ -36,7 +37,7 @@ public class ProfileController {
                 throw new RuntimeException("Token tidak valid atau sudah expired");
             }
 
-            Long userId = jwtUtil.extractUserId(token);
+            UUID userId = jwtUtil.extractUserId(token);
             User user = userService.findById(userId);
             user.setPasswordHash(null);
 
@@ -87,7 +88,7 @@ public class ProfileController {
                 throw new RuntimeException("Token tidak valid atau sudah expired");
             }
 
-            Long userId = jwtUtil.extractUserId(token);
+            UUID userId = jwtUtil.extractUserId(token);
             User existingUser = userService.findById(userId);
 
             if (username != null && !username.isEmpty()) {

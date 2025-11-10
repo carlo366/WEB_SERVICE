@@ -4,15 +4,19 @@ import com.example.web_service.dto.JwtResponse;
 import com.example.web_service.dto.LoginRequest;
 import com.example.web_service.dto.Response;
 import com.example.web_service.entity.User;
+import com.example.web_service.exception.ApplicationException;
 import com.example.web_service.security.JwtUtil;
 import com.example.web_service.service.UserService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -34,9 +39,6 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     private Map<String, Object> successResponse(Object data, String message) {
         Map<String, Object> map = new HashMap<>();
@@ -64,8 +66,7 @@ public class AuthController {
             @RequestParam("email") String email,
             @RequestParam(value = "avatar", required = false) MultipartFile avatar,
             @RequestParam(value = "bio", required = false) String bio
-    ) {
-        try {
+    ) throws IOException {
             if (username.isEmpty()) throw new RuntimeException("Username wajib diisi");
             if (password.isEmpty()) throw new RuntimeException("Password wajib diisi");
             if (email.isEmpty()) throw new RuntimeException("Email wajib diisi");
@@ -90,59 +91,27 @@ public class AuthController {
 
             return successResponse(savedUser, "Register berhasil!");
 
-        } catch (IOException e) {
-            return errorResponse("Gagal upload avatar: " + e.getMessage(), 400);
-        } catch (Exception e) {
-            return errorResponse(e.getMessage(), 400);
-        }
     }
 
     // ✅ LOGIN
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody Map<String, String> body) {
-        try {
-            String username = body.get("username");
-            String password = body.get("password");
-
-            if (username == null || username.isEmpty()) throw new RuntimeException("Username wajib diisi");
-            if (password == null || password.isEmpty()) throw new RuntimeException("Password wajib diisi");
-
-            User user = userService.findByUsername(username);
-
-            if (passwordEncoder.matches(password, user.getPasswordHash())) {
-                String token = jwtUtil.generateToken(user.getId());
-                long expiresIn = jwtUtil.getExpirationTime();
- 
-                Map<String, Object> data = new HashMap<>();
-                data.put("token", token);
-                data.put("expiresIn", expiresIn / 1000 + " detik");
-                data.put("user", user);
-
-                return successResponse(data, "Login berhasil!");
-            } else {
-                return errorResponse("Password salah!", 400);
+    public ResponseEntity<Response<JwtResponse>> login(@RequestBody @Valid LoginRequest body) {
+            User user = userService.findByUsername(body.username());
+            if (user==null){
+                throw new ApplicationException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
             }
-        } catch (Exception e) {
-            return errorResponse(e.getMessage(), 400);
-        }
-    }
+            if (passwordEncoder.matches(body.password(), user.getPasswordHash())) {
+                String token = jwtUtil.generateToken(user.getId());
 
-//    @PostMapping("/login")
-//    public ResponseEntity<Response<JwtResponse>> newLogin(@Valid @RequestBody LoginRequest request){
-//        try {
-//            UsernamePasswordAuthenticationToken authenticationToken=
-//                    new UsernamePasswordAuthenticationToken(request.username(),request.password());
-//            authenticationManager.authenticate(authenticationToken);
-//
-//            String token=jwtUtil.generateToken(1L);
-//            return ResponseEntity.ok(new Response<JwtResponse>(new JwtResponse(token)));
-//        }catch (org.springframework.security.authentication.BadCredentialsException ex){
-//            throw new BadCredentialsException("Invalid username or password");
-//        }
-//        catch (Exception e) {
-//            throw new RuntimeException("Invalid Username or Password!");
-//        }
-//    }
+                return ResponseEntity.ok(Response.successfulResponse("Login Success",new JwtResponse(token)));
+            } else {
+                throw new ApplicationException(
+                        HttpStatus.UNAUTHORIZED, // ← 401
+                        "Invalid username or password",
+                        null);
+            }
+
+    }
 
     // ✅ LOGOUT
     @PostMapping("/logout")

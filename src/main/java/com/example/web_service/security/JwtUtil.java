@@ -20,7 +20,7 @@ public class JwtUtil {
     private final Set<String> blacklistedTokens = new HashSet<>();
 
     // ini genereate token
-    public String generateToken(Long userId) {
+    public String generateToken(UUID userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + EXPIRATION_TIME);
 
@@ -45,14 +45,14 @@ public class JwtUtil {
         }
     }
 
-    public Long extractUserId(String token) {
+    public UUID extractUserId(String token) {
         String subject = Jwts.parserBuilder()
                 .setSigningKey(SECRET_KEY)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
-        return Long.parseLong(subject);
+        return UUID.fromString(subject);
     }
 
     public String extractUsername(String token) {

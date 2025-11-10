@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class PostService {
@@ -34,12 +35,12 @@ public class PostService {
         return postRepository.findByUser(user);
     }
 
-    public Post getPostByUserAndId(User user, Long postId) {
+    public Post getPostByUserAndId(User user, UUID postId) {
         return postRepository.findByUserAndId(user, postId)
                 .orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
     }
 
-    public Post getPostByUsernameAndId(String username, Long postId) {
+    public Post getPostByUsernameAndId(String username, UUID postId) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
         return postRepository.findByUserAndId(user, postId)

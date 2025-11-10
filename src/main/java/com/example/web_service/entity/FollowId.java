@@ -1,6 +1,8 @@
 package com.example.web_service.entity;
 
 import java.io.Serializable;
+import java.util.UUID;
+
 import lombok.*;
 
 @Getter
@@ -8,6 +10,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FollowId implements Serializable {
-    private Long followerId;
-    private Long followeeId;
+    private UUID followerId;
+    private UUID followeeId;
 }

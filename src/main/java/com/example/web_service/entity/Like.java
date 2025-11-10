@@ -3,6 +3,7 @@ package com.example.web_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -12,14 +13,14 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "likes")
 public class Like {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id @GeneratedValue
+    private UUID id;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(name = "target_id", nullable = false) 
-    private Long targetId;
+    private UUID targetId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

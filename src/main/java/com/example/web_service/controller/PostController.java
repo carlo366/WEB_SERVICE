@@ -94,10 +94,11 @@ public class PostController {
 
     // ini get detil post by username
     @GetMapping("/users/{username}/posts/{postId}")
-    public Map<String,Object> getPostDetailByUsername(@PathVariable String username, @PathVariable Long postId) {
+    public Map<String,Object> getPostDetailByUsername(@PathVariable String username, @PathVariable String postId) {
         Map<String,Object> resp = new HashMap<>();
         try {
-            Post post = postService.getPostByUsernameAndId(username, postId);
+            UUID postUUID=UUID.fromString(postId);
+            Post post = postService.getPostByUsernameAndId(username, postUUID);
 
             Map<String,Object> data = new HashMap<>();
             data.put("id", post.getId());
@@ -125,7 +126,7 @@ public class PostController {
         Map<String,Object> resp = new HashMap<>();
         try {
             String token = authHeader.substring(7);
-            Long userId = jwtUtil.extractUserId(token); 
+            UUID userId = jwtUtil.extractUserId(token);
             User user = userService.findById(userId); 
             List<Post> posts = postService.getPostsByUser(user);
 
@@ -153,13 +154,14 @@ public class PostController {
 
     // detil post pribadi
     @GetMapping("/posts/self/{postId}")
-    public Map<String,Object> getOwnPostDetail(@RequestHeader("Authorization") String authHeader, @PathVariable Long postId) {
+    public Map<String,Object> getOwnPostDetail(@RequestHeader("Authorization") String authHeader, @PathVariable String postId) {
         Map<String,Object> resp = new HashMap<>();
         try {
             String token = authHeader.substring(7);
-            Long userId = jwtUtil.extractUserId(token); 
+            UUID userId = jwtUtil.extractUserId(token);
+            UUID postUUID=UUID.fromString(postId);
             User user = userService.findById(userId);   
-            Post post = postService.getPostByUserAndId(user, postId);
+            Post post = postService.getPostByUserAndId(user, postUUID);
 
             Map<String,Object> data = new HashMap<>();
             data.put("id", post.getId());
@@ -195,8 +197,8 @@ public class PostController {
             if (!jwtUtil.validateToken(token))
                 throw new RuntimeException("Token tidak valid/expired");
 
-            Long userId = jwtUtil.extractUserId(token); 
-            User user = userService.findById(userId);   
+            UUID userId = jwtUtil.extractUserId(token);
+            User user = userService.findById(userId);
 
             String content = body.get("content");
             String media = body.get("media");
