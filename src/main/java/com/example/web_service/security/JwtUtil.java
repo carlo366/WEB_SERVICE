@@ -2,6 +2,7 @@ package com.example.web_service.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -11,6 +12,8 @@ import java.util.*;
 @Component
 public class JwtUtil {
 
+//    @Value("${jwt_secret}")
+//    private String secret;
     private final Key SECRET_KEY = Keys
             .hmacShaKeyFor("supersecretkeysupersecretkey1234".getBytes(StandardCharsets.UTF_8));
     private final long EXPIRATION_TIME = 2 * 60 * 60 * 1000;

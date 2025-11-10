@@ -1,9 +1,17 @@
 package com.example.web_service.controller;
 
+import com.example.web_service.dto.JwtResponse;
+import com.example.web_service.dto.LoginRequest;
+import com.example.web_service.dto.Response;
 import com.example.web_service.entity.User;
 import com.example.web_service.security.JwtUtil;
 import com.example.web_service.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,6 +34,9 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     private Map<String, Object> successResponse(Object data, String message) {
         Map<String, Object> map = new HashMap<>();
@@ -115,6 +126,23 @@ public class AuthController {
             return errorResponse(e.getMessage(), 400);
         }
     }
+
+//    @PostMapping("/login")
+//    public ResponseEntity<Response<JwtResponse>> newLogin(@Valid @RequestBody LoginRequest request){
+//        try {
+//            UsernamePasswordAuthenticationToken authenticationToken=
+//                    new UsernamePasswordAuthenticationToken(request.username(),request.password());
+//            authenticationManager.authenticate(authenticationToken);
+//
+//            String token=jwtUtil.generateToken(1L);
+//            return ResponseEntity.ok(new Response<JwtResponse>(new JwtResponse(token)));
+//        }catch (org.springframework.security.authentication.BadCredentialsException ex){
+//            throw new BadCredentialsException("Invalid username or password");
+//        }
+//        catch (Exception e) {
+//            throw new RuntimeException("Invalid Username or Password!");
+//        }
+//    }
 
     // ✅ LOGOUT
     @PostMapping("/logout")
