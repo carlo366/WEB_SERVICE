@@ -4,7 +4,6 @@ import com.example.web_service.entity.*;
 import com.example.web_service.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -20,38 +19,43 @@ public class PostInteractionService {
     @Autowired
     private CommentRepository commentRepository;
 
-    public String likePost(UUID postId, UUID userId) {
+    
+    public String toggleLike(UUID postId, UUID userId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
 
-        boolean alreadyLiked = likeRepository.existsByUserIdAndTargetId(userId, postId);
-        if (alreadyLiked) {
-            throw new RuntimeException("Kamu sudah menyukai postingan ini");
+        Like like = likeRepository.findByUserIdAndTargetId(userId, postId).orElse(null);
+
+        if (like == null) {
+            like = Like.builder()
+                    .userId(userId)
+                    .targetId(postId)
+                    .status(true)
+                    .build();
+            likeRepository.save(like);
+            return "Post disukai!";
+        } else {
+            // toggle status (true = like, false = unlike)
+            like.setStatus(!like.getStatus());
+            likeRepository.save(like);
+            return like.getStatus() ? "Post disukai kembali!" : "Unlike berhasil!";
         }
-
-        Like like = Like.builder()
-                .userId(userId)
-                .targetId(postId)
-                .build();
-
-        likeRepository.save(like);
-        return "Post disukai!";
     }
 
-    public String unlikePost(UUID postId, UUID userId) {
-        Like like = likeRepository.findByUserIdAndTargetId(userId, postId)
-                .orElseThrow(() -> new RuntimeException("Kamu belum menyukai postingan ini"));
-
-        likeRepository.delete(like);
-        return "Unlike berhasil!";
+ 
+    public boolean isLikedByUser(UUID postId, UUID userId) {
+        return likeRepository.findByUserIdAndTargetId(userId, postId)
+                .map(Like::getStatus)
+                .orElse(false);
     }
 
     public Comment addComment(UUID postId, UUID userId, String body) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
 
-        if (body == null || body.trim().isEmpty())
+        if (body == null || body.trim().isEmpty()) {
             throw new RuntimeException("Isi komentar tidak boleh kosong");
+        }
 
         Comment comment = Comment.builder()
                 .post(post)
@@ -62,6 +66,7 @@ public class PostInteractionService {
         return commentRepository.save(comment);
     }
 
+    
     public String deleteComment(UUID commentId, UUID userId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Komentar tidak ditemukan"));
@@ -77,13 +82,10 @@ public class PostInteractionService {
         return "Komentar berhasil dihapus!";
     }
 
-    public long countLikes(UUID postId) {
-        return likeRepository.countByTargetId(postId);
-    }
-
     public List<Comment> getComments(UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
+
         return commentRepository.findByPost(post);
     }
 }

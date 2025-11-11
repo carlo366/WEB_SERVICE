@@ -1,12 +1,11 @@
 package com.example.web_service.controller;
 
-import com.example.web_service.service.FollowService;
+import com.example.web_service.dto.Response;
 import com.example.web_service.security.JwtUtil;
+import com.example.web_service.service.FollowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -19,13 +18,12 @@ public class FollowController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // ini follow
+    // === FOLLOW USER ===
     @PostMapping("/{userId}")
-    public Map<String, Object> followUser(
+    public Response<Void> followUser(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable String userId
     ) {
-        Map<String, Object> resp = new HashMap<>();
         try {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 throw new RuntimeException("Header Authorization tidak valid");
@@ -37,29 +35,21 @@ public class FollowController {
             }
 
             UUID followerId = jwtUtil.extractUserId(token);
-            UUID userUUID=UUID.fromString(userId);
+            UUID userUUID = UUID.fromString(userId);
             followService.followUser(followerId, userUUID);
 
-            resp.put("status_code", 200);
-            resp.put("message", "Berhasil mengikuti user!");
-            resp.put("success", true);
-            resp.put("data", null);
+            return Response.successfulResponse("Berhasil mengikuti user!");
         } catch (Exception e) {
-            resp.put("status_code", 400);
-            resp.put("message", e.getMessage());
-            resp.put("success", false);
-            resp.put("data", null);
+            return Response.failedResponse(e.getMessage());
         }
-        return resp;
     }
 
-    // ini unfollow
+    // === UNFOLLOW USER ===
     @DeleteMapping("/{userId}")
-    public Map<String, Object> unfollowUser(
+    public Response<Void> unfollowUser(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable String userId
     ) {
-        Map<String, Object> resp = new HashMap<>();
         try {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 throw new RuntimeException("Header Authorization tidak valid");
@@ -71,19 +61,12 @@ public class FollowController {
             }
 
             UUID followerId = jwtUtil.extractUserId(token);
-            UUID userUUID=UUID.fromString(userId);
+            UUID userUUID = UUID.fromString(userId);
             followService.unfollowUser(followerId, userUUID);
 
-            resp.put("status_code", 200);
-            resp.put("message", "Berhasil berhenti mengikuti user!");
-            resp.put("success", true);
-            resp.put("data", null);
+            return Response.successfulResponse("Berhasil berhenti mengikuti user!");
         } catch (Exception e) {
-            resp.put("status_code", 400);
-            resp.put("message", e.getMessage());
-            resp.put("success", false);
-            resp.put("data", null);
+            return Response.failedResponse(e.getMessage());
         }
-        return resp;
     }
 }
