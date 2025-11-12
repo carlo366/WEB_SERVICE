@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.example.web_service.dto.UserDto;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -44,8 +46,14 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Transient
+    private boolean isFollowed;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) createdAt = LocalDateTime.now();
+    }
+    public UserDto tDto(){
+        return new UserDto(this.id, this.username, this.email, this.avatar, this.bio, this.isFollowed);
     }
 }

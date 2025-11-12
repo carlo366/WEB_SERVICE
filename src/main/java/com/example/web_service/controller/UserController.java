@@ -30,6 +30,7 @@ public class UserController {
             data.put("bio", user.getBio());
             data.put("followers", userService.countFollowers(user.getId()));
             data.put("following", userService.countFollowing(user.getId()));
+            data.put("is_followed", user.isFollowed());
 
             return Response.successfulResponse("User profile found!", data);
 
@@ -50,6 +51,7 @@ public class UserController {
             data.put("bio", user.getBio());
             data.put("followers", userService.countFollowers(user.getId()));
             data.put("following", userService.countFollowing(user.getId()));
+            data.put("is_followed", user.isFollowed());
 
             return Response.successfulResponse("User profile found!", data);
 

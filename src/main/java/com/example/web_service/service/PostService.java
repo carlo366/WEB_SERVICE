@@ -2,6 +2,8 @@ package com.example.web_service.service;
 
 import com.example.web_service.entity.Post;
 import com.example.web_service.entity.User;
+import com.example.web_service.repository.FollowRepository;
+import com.example.web_service.repository.LikeRepository;
 import com.example.web_service.repository.PostRepository;
 import com.example.web_service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,8 @@ import java.util.UUID;
 public class PostService {
     @Autowired private PostRepository postRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private LikeRepository likeRepository;
+    @Autowired private FollowRepository followRepository;
 
     public Post createPost(User user, String content, String mediaUrl) {
         if (user == null) throw new RuntimeException("User tidak ditemukan");
@@ -27,8 +31,38 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    public List<Post> getAllPosts() {
-        return postRepository.findAll();
+    public List<Post> getAllPosts(UUID userId) {
+        List<Post> posts = postRepository.findAll();
+
+        for (Post post : posts) {
+            boolean liked = false;
+            boolean followed = false;
+
+            if (userId != null) {
+                liked = likeRepository.existsByUserIdAndTargetId(userId, post.getId());
+                followed = followRepository.existsByFollowerIdAndFolloweeId(userId, post.getUser().getId());
+            }
+            post.getUser().setFollowed(followed);
+            post.setLiked(liked);
+        }
+
+        return posts;
+    }
+
+    public Post getPostById(UUID postId, UUID userId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post tidak ditemukan"));
+
+        boolean liked = false;
+        boolean followed = false;
+
+        if (userId != null) {
+            liked = likeRepository.existsByUserIdAndTargetId(userId, post.getId());
+            followed = followRepository.existsByFollowerIdAndFolloweeId(userId, post.getUser().getId());
+        }
+        post.getUser().setFollowed(followed);
+        post.setLiked(liked);
+
+        return post;
     }
 
     public List<Post> getPostsByUser(User user) {

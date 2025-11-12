@@ -2,12 +2,15 @@ package com.example.web_service.controller;
 
 import com.example.web_service.dto.Response;
 import com.example.web_service.entity.Comment;
+import com.example.web_service.entity.Post;
 import com.example.web_service.security.JwtUtil;
 import com.example.web_service.service.PostInteractionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -19,6 +22,8 @@ public class PostInteractionController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    private final DateTimeFormatter ISO_UTC = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     private UUID extractUserId(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
@@ -77,9 +82,13 @@ public class PostInteractionController {
     }
 
     @GetMapping("/{postId}/comments")
-    public Response<List<Comment>> getComments(@PathVariable UUID postId) {
+    public Response<List<Map<String, Object>>> getComments(@PathVariable UUID postId, @RequestHeader("Authorization") String authHeader) {
         try {
-            List<Comment> comments = postInteractionService.getComments(postId);
+            String token = authHeader.substring(7);
+
+            UUID userId = jwtUtil.extractUserId(token);
+
+            List<Map<String, Object>> comments = postInteractionService.getComments(postId, userId);
             return Response.successfulResponse("Daftar komentar berhasil diambil!", comments);
         } catch (RuntimeException e) {
             return Response.failedResponse(e.getMessage());
