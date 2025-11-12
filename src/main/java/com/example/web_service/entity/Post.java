@@ -5,6 +5,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.example.web_service.dto.PostDto;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,5 +43,8 @@ public class Post {
     @PrePersist
     public void prePersist() {
         if (createdAt == null) createdAt = LocalDateTime.now();
+    }
+    public PostDto tDto(){
+        return new PostDto(this.id, this.user.tDto(), this.content, this.mediaUrl, this.createdAt, this.isLiked, this.likesCount, this.commentsCount);
     }
 }

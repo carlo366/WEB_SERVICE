@@ -1,6 +1,8 @@
 package com.example.web_service.controller;
 
+import com.example.web_service.dto.PostDto;
 import com.example.web_service.dto.Response;
+import com.example.web_service.dto.UserDto;
 import com.example.web_service.entity.Post;
 import com.example.web_service.entity.User;
 import com.example.web_service.repository.FollowRepository;
@@ -10,6 +12,7 @@ import com.example.web_service.service.UserService;
 import com.example.web_service.repository.LikeRepository;
 import com.example.web_service.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.ZoneOffset;
@@ -62,6 +65,14 @@ public class PostController {
             return Response.failedResponse(e.getMessage());
         }
     }
+
+    // bisa dicek bagian ini ya, ini sama seperti method diatas tapi pakai DTO.
+    // @GetMapping("/posts")
+    public ResponseEntity<Response<List<PostDto>>> getAllPostsDtos(@RequestHeader("Authorization") String authHeader) {
+            List<Post> posts = postService.getAllPosts(jwtUtil.extractUserId(authHeader.substring(7)));
+            List<PostDto> out = posts.stream().map(Post::tDto).toList();
+            return ResponseEntity.ok(Response.successfulResponse("All posts retrieved successfully!",out ));
+        }
 
     @GetMapping("/posts/{postId}")
     public Response<Map<String, Object>> getPostById(@RequestHeader("Authorization") String authHeader, @PathVariable String postId) {
