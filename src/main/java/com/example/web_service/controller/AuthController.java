@@ -106,7 +106,7 @@ public class AuthController {
                 return ResponseEntity.ok(Response.successfulResponse("Login Success",new JwtResponse(token)));
             } else {
                 throw new ApplicationException(
-                        HttpStatus.UNAUTHORIZED, // ← 401
+                        HttpStatus.UNAUTHORIZED, 
                         "Invalid username or password",
                         null);
             }
