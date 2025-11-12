@@ -3,6 +3,7 @@ package com.example.web_service.controller;
 import com.example.web_service.dto.Response;
 import com.example.web_service.entity.Post;
 import com.example.web_service.entity.User;
+import com.example.web_service.repository.FollowRepository;
 import com.example.web_service.security.JwtUtil;
 import com.example.web_service.service.PostService;
 import com.example.web_service.service.UserService;
@@ -28,9 +29,13 @@ public class PostController {
     private final DateTimeFormatter ISO_UTC = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     @GetMapping("/posts")
-    public Response<List<Map<String, Object>>> getAllPosts() {
+    public Response<List<Map<String, Object>>> getAllPosts(@RequestHeader("Authorization") String authHeader) {
         try {
-            List<Post> posts = postService.getAllPosts();
+            String token = authHeader.substring(7);
+
+            UUID userId = jwtUtil.extractUserId(token);
+
+            List<Post> posts = postService.getAllPosts(userId);
             List<Map<String, Object>> out = new ArrayList<>();
 
             for (Post p : posts) {
@@ -38,12 +43,14 @@ public class PostController {
                 u.put("id", p.getUser().getId());
                 u.put("username", p.getUser().getUsername());
                 u.put("avatar", p.getUser().getAvatar());
+                u.put("is_followed", p.getUser().isFollowed());
 
                 Map<String, Object> pu = new HashMap<>();
                 pu.put("id", p.getId());
                 pu.put("user", u);
                 pu.put("content", p.getContent());
                 pu.put("media_url", p.getMediaUrl());
+                pu.put("is_liked", p.isLiked());
                 pu.put("likes_count", likeRepository.countByTargetId(p.getId()));
                 pu.put("comments_count", commentRepository.countByPost(p));
                 pu.put("created_at", p.getCreatedAt().atOffset(ZoneOffset.UTC).format(ISO_UTC));
@@ -51,6 +58,38 @@ public class PostController {
             }
 
             return Response.successfulResponse("All posts retrieved successfully!", out);
+        } catch (Exception e) {
+            return Response.failedResponse(e.getMessage());
+        }
+    }
+
+    @GetMapping("/posts/{postId}")
+    public Response<Map<String, Object>> getPostById(@RequestHeader("Authorization") String authHeader, @PathVariable String postId) {
+        try {
+            String token = authHeader.substring(7);
+
+            UUID userId = jwtUtil.extractUserId(token);
+            UUID postUUID = UUID.fromString(postId);
+
+            Post post = postService.getPostById(postUUID, userId);
+
+            Map<String, Object> u = new HashMap<>();
+            u.put("id", post.getUser().getId());
+            u.put("username", post.getUser().getUsername());
+            u.put("avatar", post.getUser().getAvatar());
+            u.put("is_followed", post.getUser().isFollowed());
+
+            Map<String, Object> pu = new HashMap<>();
+            pu.put("id", post.getId());
+            pu.put("user", u);
+            pu.put("content", post.getContent());
+            pu.put("media_url", post.getMediaUrl());
+            pu.put("is_liked", post.isLiked());
+            pu.put("likes_count", likeRepository.countByTargetId(post.getId()));
+            pu.put("comments_count", commentRepository.countByPost(post));
+            pu.put("created_at", post.getCreatedAt().atOffset(ZoneOffset.UTC).format(ISO_UTC));
+
+            return Response.successfulResponse("Post created successfully!", pu);
         } catch (Exception e) {
             return Response.failedResponse(e.getMessage());
         }
@@ -64,12 +103,22 @@ public class PostController {
             List<Map<String, Object>> out = new ArrayList<>();
 
             for (Post p : posts) {
-                Map<String, Object> item = new HashMap<>();
-                item.put("id", p.getId());
-                item.put("content", p.getContent());
-                item.put("media_url", p.getMediaUrl());
-                item.put("created_at", p.getCreatedAt().atOffset(ZoneOffset.UTC).format(ISO_UTC));
-                out.add(item);
+                Map<String, Object> u = new HashMap<>();
+                u.put("id", p.getUser().getId());
+                u.put("username", p.getUser().getUsername());
+                u.put("avatar", p.getUser().getAvatar());
+                u.put("is_followed", p.getUser().isFollowed());
+
+                Map<String, Object> pu = new HashMap<>();
+                pu.put("id", p.getId());
+                pu.put("user", u);
+                pu.put("content", p.getContent());
+                pu.put("media_url", p.getMediaUrl());
+                pu.put("is_liked", p.isLiked());
+                pu.put("likes_count", likeRepository.countByTargetId(p.getId()));
+                pu.put("comments_count", commentRepository.countByPost(p));
+                pu.put("created_at", p.getCreatedAt().atOffset(ZoneOffset.UTC).format(ISO_UTC));
+                out.add(pu);
             }
 
             return Response.successfulResponse("User posts retrieved successfully!", out);

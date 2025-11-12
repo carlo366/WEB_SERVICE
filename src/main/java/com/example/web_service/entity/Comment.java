@@ -2,6 +2,8 @@ package com.example.web_service.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -13,15 +15,16 @@ import java.util.UUID;
 @Entity
 @Table(name = "comments")
 public class Comment {
-    @Id
+    @Id @GeneratedValue @UuidGenerator
     private UUID id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "post_id")
     private Post post;
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(columnDefinition = "TEXT")
     private String body;

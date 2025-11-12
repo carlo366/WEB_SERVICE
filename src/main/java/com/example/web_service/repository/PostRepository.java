@@ -10,6 +10,7 @@ import java.util.UUID;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, UUID> {
+    Optional<Post> findById(UUID postId);
     List<Post> findByUser(User user);
     Optional<Post> findByUserAndId(User user, UUID id);
 

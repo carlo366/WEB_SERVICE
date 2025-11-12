@@ -29,6 +29,15 @@ public class Post {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Transient
+    private boolean isLiked;
+
+    @Transient
+    private long likesCount;
+
+    @Transient
+    private long commentsCount;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) createdAt = LocalDateTime.now();
