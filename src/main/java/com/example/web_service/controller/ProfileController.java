@@ -1,10 +1,14 @@
 package com.example.web_service.controller;
 
 import com.example.web_service.dto.Response;
+import com.example.web_service.dto.UserDto;
 import com.example.web_service.entity.User;
 import com.example.web_service.security.JwtUtil;
 import com.example.web_service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -58,6 +62,14 @@ public class ProfileController {
         } catch (Exception e) {
             return Response.failedResponse(e.getMessage());
         }
+    }
+
+    // example get current user profile using Security Context Holder.
+    // @GetMapping
+    public ResponseEntity<Response<UserDto>> getMyProfile(){
+        UserDetails auth = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userService.findById(UUID.fromString(auth.getUsername()));
+        return ResponseEntity.ok().body(Response.successfulResponse(200,"Success Retrieve User Profile!",user.tDto()));
     }
 
     // ✅ UPDATE PROFILE
