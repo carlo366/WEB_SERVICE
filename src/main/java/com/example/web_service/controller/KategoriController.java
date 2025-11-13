@@ -93,7 +93,7 @@ public class KategoriController {
         }
     }
 
-    // 🔹 Helper method untuk response sukses dan error
+
     private ResponseEntity<Map<String, Object>> success(String message, Object data) {
         Map<String, Object> res = new HashMap<>();
         res.put("status", "success");

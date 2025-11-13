@@ -1,5 +1,6 @@
 package com.example.web_service.controller;
 
+import com.example.web_service.dto.Response;
 import com.example.web_service.entity.User;
 import com.example.web_service.security.JwtUtil;
 import com.example.web_service.service.UserService;
@@ -23,10 +24,9 @@ public class ProfileController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // ini get profil
+    // ✅ GET PROFILE
     @GetMapping
-    public Map<String, Object> getProfile(@RequestHeader("Authorization") String authHeader) {
-        Map<String, Object> resp = new HashMap<>();
+    public Response<Map<String, Object>> getProfile(@RequestHeader("Authorization") String authHeader) {
         try {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 throw new RuntimeException("Header Authorization tidak valid");
@@ -53,31 +53,22 @@ public class ProfileController {
             data.put("followers", followersCount);
             data.put("following", followingCount);
 
-            resp.put("status_code", 200);
-            resp.put("message", "Successful!");
-            resp.put("success", true);
-            resp.put("data", data);
+            return Response.successfulResponse("Profil berhasil diambil", data);
 
         } catch (Exception e) {
-            resp.put("status_code", 400);
-            resp.put("message", e.getMessage());
-            resp.put("success", false);
-            resp.put("data", null);
+            return Response.failedResponse(e.getMessage());
         }
-
-        return resp;
     }
 
-    // ini update profil
+    // ✅ UPDATE PROFILE
     @PutMapping(consumes = {"multipart/form-data"})
-    public Map<String, Object> updateProfile(
+    public Response<Map<String, Object>> updateProfile(
             @RequestHeader("Authorization") String authHeader,
             @RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "bio", required = false) String bio,
             @RequestParam(value = "avatar", required = false) MultipartFile avatar
     ) {
-        Map<String, Object> resp = new HashMap<>();
         try {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 throw new RuntimeException("Header Authorization tidak valid");
@@ -131,23 +122,12 @@ public class ProfileController {
             data.put("bio", updated.getBio());
             data.put("avatar", updated.getAvatar());
 
-            resp.put("status_code", 200);
-            resp.put("message", "Profil berhasil diperbarui");
-            resp.put("success", true);
-            resp.put("data", data);
+            return Response.successfulResponse("Profil berhasil diperbarui", data);
 
         } catch (IOException e) {
-            resp.put("status_code", 400);
-            resp.put("message", "Gagal upload file: " + e.getMessage());
-            resp.put("success", false);
-            resp.put("data", null);
+            return Response.failedResponse("Gagal upload file: " + e.getMessage());
         } catch (Exception e) {
-            resp.put("status_code", 400);
-            resp.put("message", e.getMessage());
-            resp.put("success", false);
-            resp.put("data", null);
+            return Response.failedResponse(e.getMessage());
         }
-
-        return resp;
     }
 }

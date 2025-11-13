@@ -1,5 +1,6 @@
 package com.example.web_service.controller;
 
+import com.example.web_service.dto.Response;
 import com.example.web_service.entity.Comment;
 import com.example.web_service.security.JwtUtil;
 import com.example.web_service.service.PostInteractionService;
@@ -27,92 +28,61 @@ public class PostInteractionController {
         return jwtUtil.extractUserId(token.substring(7));
     }
 
-    private Map<String, Object> successResponse(String message, Object data) {
-        Map<String, Object> res = new HashMap<>();
-        res.put("status_code", 200);
-        res.put("message", message);
-        res.put("success", true);
-        res.put("data", data);
-        return res;
-    }
-    private Map<String, Object> errorResponse(String message) {
-        Map<String, Object> res = new HashMap<>();
-        res.put("status_code", 400);
-        res.put("message", message);
-        res.put("success", false);
-        res.put("data", null);
-        return res;
-    }
-
-    // ini like a post
     @PostMapping("/{postId}/likes")
-    public Map<String, Object> likePost(@PathVariable UUID postId, HttpServletRequest request) {
+    public Response<Map<String, Object>> toggleLike(@PathVariable UUID postId, HttpServletRequest request) {
         try {
             UUID userId = extractUserId(request);
-            String message = postInteractionService.likePost(postId, userId);
-            Map<String, Object> data = Map.of("likes_count", postInteractionService.countLikes(postId));
-            return successResponse(message, data);
+            String message = postInteractionService.toggleLike(postId, userId);
+            boolean isLiked = postInteractionService.isLikedByUser(postId, userId);
+
+            Map<String, Object> data = Map.of("status", isLiked);
+            return Response.successfulResponse(message, data);
+
         } catch (RuntimeException e) {
-            return errorResponse(e.getMessage());
+            return Response.failedResponse(e.getMessage());
         }
     }
 
-    // ini unlike
-    @DeleteMapping("/{postId}/likes")
-    public Map<String, Object> unlikePost(@PathVariable String postId, HttpServletRequest request) {
-        try {
-            UUID userId = extractUserId(request);
-            UUID postUUID=UUID.fromString(postId);
-            String message = postInteractionService.unlikePost(postUUID, userId);
-            Map<String, Object> data = Map.of("likes_count", postInteractionService.countLikes(postUUID));
-            return successResponse(message, data);
-        } catch (RuntimeException e) {
-            return errorResponse(e.getMessage());
-        }
-    }
 
-    // ini tambah komentar
     @PostMapping("/{postId}/comments")
-    public Map<String, Object> addComment(@PathVariable String postId,
-                                          @RequestBody Map<String, String> body,
-                                          HttpServletRequest request) {
+    public Response<Map<String, Object>> addComment(@PathVariable UUID postId,
+                                                    @RequestBody Map<String, String> body,
+                                                    HttpServletRequest request) {
         try {
             UUID userId = extractUserId(request);
-            UUID postUUID=UUID.fromString(postId);
             String content = body.get("content");
-            Comment comment = postInteractionService.addComment(postUUID, userId, content);
+
+            Comment comment = postInteractionService.addComment(postId, userId, content);
 
             Map<String, Object> data = new HashMap<>();
             data.put("comment_id", comment.getId());
             data.put("content", comment.getBody());
-            return successResponse("Komentar berhasil ditambahkan!", data);
+            return Response.successfulResponse("Komentar berhasil ditambahkan!", data);
+
         } catch (RuntimeException e) {
-            return errorResponse(e.getMessage());
+            return Response.failedResponse(e.getMessage());
         }
     }
 
-    // ini hapus komentar
+   
     @DeleteMapping("/comments/{commentId}")
-    public Map<String, Object> deleteComment(@PathVariable String commentId, HttpServletRequest request) {
+    public Response<Object> deleteComment(@PathVariable UUID commentId, HttpServletRequest request) {
         try {
             UUID userId = extractUserId(request);
-            UUID commentUUID=UUID.fromString(commentId);
-            String message = postInteractionService.deleteComment(commentUUID, userId);
-            return successResponse(message, null);
+            String message = postInteractionService.deleteComment(commentId, userId);
+            return Response.successfulResponse(message);
         } catch (RuntimeException e) {
-            return errorResponse(e.getMessage());
+            return Response.failedResponse(e.getMessage());
         }
     }
 
-    // ini all komentar
     @GetMapping("/{postId}/comments")
-    public Map<String, Object> getComments(@PathVariable String postId) {
+    public Response<List<Comment>> getComments(@PathVariable UUID postId) {
         try {
-            UUID postUUID=UUID.fromString(postId);
-            List<Comment> comments = postInteractionService.getComments(postUUID);
-            return successResponse("Daftar komentar berhasil diambil!", comments);
+            List<Comment> comments = postInteractionService.getComments(postId);
+            return Response.successfulResponse("Daftar komentar berhasil diambil!", comments);
         } catch (RuntimeException e) {
-            return errorResponse(e.getMessage());
+            return Response.failedResponse(e.getMessage());
         }
     }
 }
